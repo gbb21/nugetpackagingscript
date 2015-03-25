@@ -61,9 +61,15 @@ function unpackFromHTTPZip {
 
 
 function getInstalledVSEnvs {
+    $cmakeGenerators = @{
+        "VS100COMNTOOLS" = "Visual Studio 10 2010";
+        "VS110COMNTOOLS" = "Visual Studio 11 2012";
+        "VS120COMNTOOLS" = "Visual Studio 12 2013";
+        "VS140COMNTOOLS" = "Visual Studio 10 2015"}
+
     Get-ChildItem Env:\VS*COMNTOOLS | ? {Test-Path $_.value} `
     | select name, @{Name="value"; Expression={Join-Path (get-item $_.value).parent.parent.FullName "vc\vcvarsall.bat" }} `
-    | ? {Test-Path $_.value} | % {New-Object psobject -Property @{name=$_.Name.Substring(0, 5); command=$_.Value}}
+    | ? {Test-Path $_.value} | % {New-Object psobject -Property @{name=$_.Name.Substring(0, 5); command=$_.Value; cmakeName=$cmakeGenerators[$_.Name]}}
 }
 
 
