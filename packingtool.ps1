@@ -95,3 +95,45 @@ function executeWithVSEnv {
     }
 }
 
+
+function cmakeWithVSEnv {
+    Param(
+        [Parameter(ValueFromPipeline=$True)] $vsenv,
+        [ValidateScript({Test-Path $_ -PathType "Container"})]
+        [String] $srcPath,
+        [ValidateScript({Test-Path $_ -PathType "Container"})]
+        [String] $buildPath,
+        [ValidateSet("Win32", "Win64")]
+        [String[]] $archs = @("Win32", "Win64")
+    )
+    begin {
+        $buildPath = (Resolve-Path $buildPath).Path
+        $srcPath = (Resolve-Path $srcPath).Path
+    }
+
+    process
+    {
+        $subPath = Join-Path $buildPath $vsenv.name
+
+        if ($archs -contains "Win32") {
+            $tarPath = Join-Path $subPath "Win32"
+            mkdir -Force $tarPath > $null
+            pushd $tarPath
+            cmake -G $vsenv.cmakeName $srcPath > cmakelog.log
+            popd
+            Write-Output $tarPath
+        }
+
+        if ($archs -contains "Win64") {
+            Write-Verbose ""
+            $tarPath = Join-Path $subPath "Win64"
+            mkdir -Force $tarPath > $null
+            pushd $tarPath
+            cmake -G "$($vsenv.cmakeName) Win64" $srcPath > cmakelog.log
+            popd
+            Write-Output $tarPath
+
+        }
+    }
+
+}
