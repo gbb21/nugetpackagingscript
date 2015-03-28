@@ -137,3 +137,198 @@ function cmakeWithVSEnv {
     }
 
 }
+
+Add-Type -TypeDefinition @'
+using System;
+using System.IO;
+namespace nugetpackagepathfactory
+{
+	public class Folder
+	{
+		protected string m_path;
+
+		protected string extpends(string folderName)
+		{
+			return Path.Combine(m_path, folderName);
+		}
+
+		public string path
+		{
+			get { return m_path; }
+		}
+
+		public Folder create()
+		{
+			if (!Directory.Exists(this.path))
+				Directory.CreateDirectory(this.path);
+			return this;
+		}
+
+		public override string ToString() {
+			return path;
+		}
+	}
+
+	public class DestFolder : Folder
+	{
+		public DestFolder(String path) { m_path = path; }
+		public DestFolder name(string subFolderName)
+		{
+			return new DestFolder(this.extpends(subFolderName));
+		}
+
+		private string[] resolve(string srcPath, SearchOption opt)
+		{
+			string pathOnly = Path.GetDirectoryName(srcPath);
+			if (pathOnly == String.Empty)
+				pathOnly = ".";
+			return Directory.GetFiles(pathOnly, Path.GetFileName(srcPath), opt);
+		}
+
+		public DestFolder copyTo(string srcPath, bool recursive = false)
+		{
+			create();
+			foreach (var file in resolve(srcPath, recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
+				File.Copy(file, Path.Combine(this.path, Path.GetFileName(file)), true);
+			return this;
+		}
+
+		public DestFolder moveTo(string srcPath, bool recursive = false)
+		{
+			create();
+			foreach (var file in resolve(srcPath, recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
+				File.Move(file, Path.Combine(this.path, Path.GetFileName(file)));
+			return this;
+		}
+
+	}
+
+	public class ConfigFolder : Folder
+	{
+		public ConfigFolder(String path) { m_path = path; }
+		public DestFolder name(string subFolderName)
+		{
+			return new DestFolder(this.extpends(subFolderName));
+		}
+
+		public DestFolder debug { get { return name("debug"); } }
+
+		public DestFolder release { get { return name("release"); } }
+	}
+
+	public class ArchFolder : Folder
+	{
+		public ArchFolder(String path) { m_path = path; }
+		public ConfigFolder name(string subFolderName)
+		{
+			return new ConfigFolder(this.extpends(subFolderName));
+		}
+
+		public ConfigFolder win32 { get { return name("win32"); } }
+
+		public ConfigFolder x64 { get { return name("x64"); } }
+	}
+
+	public class RTLinkFolder : Folder
+	{
+		public RTLinkFolder(String path) { m_path = path; }
+		public ArchFolder name(string subFolderName)
+		{
+			return new ArchFolder(this.extpends(subFolderName));
+		}
+
+		public ArchFolder dynamcRT { get { return name("rt-dyn"); } }
+
+		public ArchFolder staticRT { get { return name("rt-static"); } }
+	}
+
+	public class LibLinkFolder : Folder
+	{
+		public LibLinkFolder(String path) { m_path = path; }
+		public RTLinkFolder name(string subFolderName)
+		{
+			return new RTLinkFolder(this.extpends(subFolderName));
+		}
+
+		public RTLinkFolder dynamcLib { get { return name("dynamic"); } }
+
+		public RTLinkFolder staticLib { get { return name("static"); } }
+	}
+
+	public class LibSTLFolder : Folder
+	{
+		public LibSTLFolder(String path) { m_path = path; }
+		public LibLinkFolder name(string subFolderName)
+		{
+			return new LibLinkFolder(this.extpends(subFolderName));
+		}
+
+		public LibLinkFolder msvcSTL { get { return name("msvcstl"); } }
+
+		public LibLinkFolder libCXX { get { return name("libcxx"); } }
+
+		public LibLinkFolder libStdCXX { get { return name("libstdcxx"); } }
+	}
+
+	public class PlatformFolder : Folder
+	{
+		public PlatformFolder(String path) { m_path = path; }
+		public LibSTLFolder name(string subFolderName)
+		{
+			return new LibSTLFolder(this.extpends(subFolderName));
+		}
+
+		public LibSTLFolder winDesktop { get { return name("windesktop"); } }
+
+		public LibSTLFolder winApp { get { return name("winapp"); } }
+
+		public LibSTLFolder winXP { get { return name("winxp"); } }
+		public LibSTLFolder winphone { get { return name("winphone"); } }
+	}
+
+	public class ToolsetFolder : Folder
+	{
+		public ToolsetFolder(String path) { m_path = path; }
+		public PlatformFolder name(string subFolderName)
+		{
+			return new PlatformFolder(this.extpends(subFolderName));
+		}
+
+		public PlatformFolder vs120 { get { return name("v120"); } }
+
+		public PlatformFolder vs140 { get { return name("v140"); } }
+
+		public PlatformFolder vs110 { get { return name("v110"); } }
+		public PlatformFolder vs100 { get { return name("v100"); } }
+	}
+
+	public class RootFolder : Folder
+	{
+		public RootFolder(String path)
+		{
+			m_path = path;
+			if (!Directory.Exists(path))
+				Directory.CreateDirectory(path);
+		}
+		public DestFolder name(string subFolderName)
+		{
+			return new DestFolder(this.extpends(subFolderName));
+		}
+
+		public DestFolder include { get { return new DestFolder(this.extpends("build/native/include")); } }
+
+		public ToolsetFolder lib { get { return new ToolsetFolder(this.extpends("lib/native")); } }
+	}
+
+}
+'@ -Language CSharp
+
+function getNuGetPackingRoot {
+    Param(
+        [Parameter(Mandatory=$true)]
+        [ValidateScript({Test-Path $_ -PathType "Container"})]
+        [String] $packageRootPath
+    )
+
+    New-Object nugetpackagepathfactory.RootFolder $packageRootPath
+}
