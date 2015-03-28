@@ -164,7 +164,8 @@ namespace nugetpackagepathfactory
 			return this;
 		}
 
-		public override string ToString() {
+		public override string ToString()
+		{
 			return path;
 		}
 	}
@@ -237,7 +238,7 @@ namespace nugetpackagepathfactory
 			return new ArchFolder(this.extpends(subFolderName));
 		}
 
-		public ArchFolder dynamcRT { get { return name("rt-dyn"); } }
+		public ArchFolder dynamicRT { get { return name("rt-dyn"); } }
 
 		public ArchFolder staticRT { get { return name("rt-static"); } }
 	}
@@ -250,7 +251,7 @@ namespace nugetpackagepathfactory
 			return new RTLinkFolder(this.extpends(subFolderName));
 		}
 
-		public RTLinkFolder dynamcLib { get { return name("dynamic"); } }
+		public RTLinkFolder dynamicLib { get { return name("dyn"); } }
 
 		public RTLinkFolder staticLib { get { return name("static"); } }
 	}
