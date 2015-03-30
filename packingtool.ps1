@@ -189,6 +189,8 @@ namespace nugetpackagepathfactory
 		public DestFolder copyTo(string srcPath, bool recursive = false)
 		{
 			create();
+
+			string pathOnly = Path.GetDirectoryName(srcPath);
 			foreach (var file in resolve(srcPath, recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
 				File.Copy(file, Path.Combine(this.path, Path.GetFileName(file)), true);
 			return this;
@@ -238,9 +240,9 @@ namespace nugetpackagepathfactory
 			return new ArchFolder(this.extpends(subFolderName));
 		}
 
-		public ArchFolder dynamicRT { get { return name("rt-dyn"); } }
+		public ArchFolder dynamic_rt { get { return name("rt-dyn"); } }
 
-		public ArchFolder staticRT { get { return name("rt-static"); } }
+		public ArchFolder static_rt { get { return name("rt-static"); } }
 	}
 
 	public class LibLinkFolder : Folder
@@ -251,9 +253,9 @@ namespace nugetpackagepathfactory
 			return new RTLinkFolder(this.extpends(subFolderName));
 		}
 
-		public RTLinkFolder dynamicLib { get { return name("dyn"); } }
+		public RTLinkFolder dynamic_lib { get { return name("dyn"); } }
 
-		public RTLinkFolder staticLib { get { return name("static"); } }
+		public RTLinkFolder static_lib { get { return name("static"); } }
 	}
 
 	public class LibSTLFolder : Folder
@@ -264,11 +266,11 @@ namespace nugetpackagepathfactory
 			return new LibLinkFolder(this.extpends(subFolderName));
 		}
 
-		public LibLinkFolder msvcSTL { get { return name("msvcstl"); } }
+		public LibLinkFolder msvcstl { get { return name("msvcstl"); } }
 
-		public LibLinkFolder libCXX { get { return name("libcxx"); } }
+		public LibLinkFolder libcxx { get { return name("libcxx"); } }
 
-		public LibLinkFolder libStdCXX { get { return name("libstdcxx"); } }
+		public LibLinkFolder libstdcxx { get { return name("libstdcxx"); } }
 	}
 
 	public class PlatformFolder : Folder
@@ -279,11 +281,11 @@ namespace nugetpackagepathfactory
 			return new LibSTLFolder(this.extpends(subFolderName));
 		}
 
-		public LibSTLFolder winDesktop { get { return name("windesktop"); } }
+		public LibSTLFolder windesktop { get { return name("windesktop"); } }
 
-		public LibSTLFolder winApp { get { return name("winapp"); } }
+		public LibSTLFolder winapp { get { return name("winapp"); } }
 
-		public LibSTLFolder winXP { get { return name("winxp"); } }
+		public LibSTLFolder winxp { get { return name("winxp"); } }
 		public LibSTLFolder winphone { get { return name("winphone"); } }
 	}
 
@@ -295,12 +297,12 @@ namespace nugetpackagepathfactory
 			return new PlatformFolder(this.extpends(subFolderName));
 		}
 
-		public PlatformFolder vs120 { get { return name("v120"); } }
+		public PlatformFolder v120 { get { return name("v120"); } }
 
-		public PlatformFolder vs140 { get { return name("v140"); } }
+		public PlatformFolder v140 { get { return name("v140"); } }
 
-		public PlatformFolder vs110 { get { return name("v110"); } }
-		public PlatformFolder vs100 { get { return name("v100"); } }
+		public PlatformFolder v110 { get { return name("v110"); } }
+		public PlatformFolder v100 { get { return name("v100"); } }
 	}
 
 	public class RootFolder : Folder
@@ -316,9 +318,9 @@ namespace nugetpackagepathfactory
 			return new DestFolder(this.extpends(subFolderName));
 		}
 
-		public DestFolder include { get { return new DestFolder(this.extpends("build/native/include")); } }
+		public DestFolder include { get { return new DestFolder(this.extpends("include")); } }
 
-		public ToolsetFolder lib { get { return new ToolsetFolder(this.extpends("lib/native")); } }
+		public ToolsetFolder lib { get { return new ToolsetFolder(this.path); } }
 	}
 
 }
