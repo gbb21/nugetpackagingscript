@@ -320,7 +320,7 @@ namespace nugetpackagepathfactory
 
 		public DestFolder include { get { return new DestFolder(this.extpends("include")); } }
 
-		public ToolsetFolder lib { get { return new ToolsetFolder(this.path); } }
+		public ToolsetFolder lib { get { return new ToolsetFolder(this.extpends("lib")); } }
 	}
 
 }
